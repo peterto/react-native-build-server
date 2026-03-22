@@ -1,0 +1,47 @@
+---
+- name: Setup React Native Build Environment
+  hosts: buildservers2
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Install Base Dependencies
+      ansible.builtin.include_role:
+        name: base
+
+    - name: Install Java SDK
+      ansible.builtin.include_role:
+        name: javasdk
+
+    - name: Install Homebrew
+      ansible.builtin.include_role:
+        name: homebrew
+
+    - name: Install Watchman
+      ansible.builtin.include_role:
+        name: watchman
+    
+    - name: Install NodeJS
+      ansible.builtin.include_role:
+        name: node
+
+    - name: Install Expo CLI
+      ansible.builtin.include_role:
+        name: expo
+
+    - name: Install Android SDK Command Line Tools
+      ansible.builtin.include_role:
+        name: androidsdk
+
+    - name: Remove Incompatible Java SDK Versions
+      ansible.builtin.include_role:
+        name: javasdk
+        tasks_from: remove_incompatible_jdks
+
+
+  # roles:
+  #   - system.base
+  #   - system.homebrew
+  #   - system.watchman
+  #   - system.androidsdk
+  #   - system.expo

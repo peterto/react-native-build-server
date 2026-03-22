@@ -1,0 +1,52 @@
+# Ansible artifacts
+*.retry
+.cache/
+*.log
+*.vagrant
+.DS_Store
+.ansible
+*.retry
+roles*
+config.yml
+
+# Local inventories / credentials (keep out of repo)
+inventory
+inventories/
+host_vars/
+group_vars/
+.vault_pass
+vault_password.txt
+*.vault_pass
+reference/
+
+# SSH keys and private files
+*.pem
+*.key
+*.ppk
+
+# Molecule (testing)
+.molecule/
+
+# Python / virtualenv
+venv/
+.venv/
+.env
+.envrc
+__pycache__/
+*.pyc
+
+# Common directories / build artifacts
+node_modules/
+dist/
+coverage/
+
+# IDE / OS / editor temp files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.tmp
+*.bak
+scratch/
