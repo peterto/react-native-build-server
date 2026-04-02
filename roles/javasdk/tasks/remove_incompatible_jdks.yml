@@ -1,0 +1,33 @@
+- name: Remove openjdk-21-jdk-headless if it exists (Debian)
+  become: true
+  ansible.builtin.apt:
+    name: openjdk-21-jdk-headless
+    state: absent
+  when: ansible_distribution == "Debian"
+
+- name: Remove openjdk-21-jre-headless if it exists (Debian)
+  become: true
+  ansible.builtin.apt:
+    name: openjdk-21-jre-headless
+    state: absent
+  when: ansible_distribution == "Debian"
+
+- name: Remove default-jdk-headless if it exists (Debian)
+  become: true
+  ansible.builtin.apt:
+    name: default-jdk-headless
+    state: absent
+  when: ansible_distribution == "Debian"
+
+- name: Remove default-jre-headless if it exists (Debian)
+  become: true
+  ansible.builtin.apt:
+    name: default-jre-headless
+    state: absent
+  when: ansible_distribution == "Debian"
+
+- name: Set environment variable for JAVA_HOME
+  ansible.builtin.lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    line: 'export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))'
+    state: present

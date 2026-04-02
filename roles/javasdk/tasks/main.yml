@@ -1,0 +1,73 @@
+- name: Remove openjdk-21-jdk-headless if it exists (Debian)
+  become: true
+  ansible.builtin.apt:
+    name: openjdk-21-jdk-headless
+    state: absent
+  when: ansible_distribution == "Debian"
+
+- name: Remove openjdk-21-jre-headless if it exists (Debian)
+  become: true
+  ansible.builtin.apt:
+    name: openjdk-21-jre-headless
+    state: absent
+  when: ansible_distribution == "Debian"
+
+- name: Remove default-jdk-headless if it exists (Debian)
+  become: true
+  ansible.builtin.apt:
+    name: default-jdk-headless
+    state: absent
+  when: ansible_distribution == "Debian"
+
+- name: Remove default-jre-headless if it exists (Debian)
+  become: true
+  ansible.builtin.apt:
+    name: default-jre-headless
+    state: absent
+  when: ansible_distribution == "Debian"
+
+- name: Ensure prerequisites for adding repos (Debian)
+  become: true
+  ansible.builtin.apt:
+    name:
+      - gnupg
+      - apt-transport-https
+      - ca-certificates
+      - curl
+    state: present
+    update_cache: yes
+  when: ansible_distribution == "Debian"
+
+- name: Download adoptium GPG key (Debian)
+  become: true
+  ansible.builtin.get_url:
+    url: https://packages.adoptium.net/artifactory/api/gpg/key/public
+    dest: /usr/share/keyrings/adoptium.gpg
+    mode: '0644'
+    owner: root
+    group: root
+  when: ansible_distribution == "Debian"
+
+- name: Add adoptium apt repository (Debian)
+  become: true
+  ansible.builtin.apt_repository:
+    filename: adoptium
+    repo: "deb [signed-by=/usr/share/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb {{ ansible_distribution_release }} main"
+    state: present
+    update_cache: yes
+  when: ansible_distribution == "Debian"
+  notify: "update package cache"
+
+- name: Install Temurin JDK 17 (Debian)
+  become: true
+  ansible.builtin.apt:
+    name: temurin-17-jdk
+    state: present
+    install_recommends: no
+  when: ansible_distribution == "Debian"
+
+- name: Set environment variable for JAVA_HOME
+  ansible.builtin.lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    line: 'export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))'
+    state: present

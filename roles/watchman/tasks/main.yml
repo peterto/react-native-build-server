@@ -1,0 +1,6 @@
+---
+- name: Install Watchman with Homebrew
+  become: false 
+  community.general.homebrew:
+    name: watchman
+    state: present

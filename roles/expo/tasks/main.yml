@@ -1,0 +1,24 @@
+---
+- name: Install EAS CLI globally
+  community.general.npm:
+    name: eas-cli
+    global: yes
+    state: present
+
+# - name: Install Expo CLI globally
+#   community.general.npm:
+#     name: "expo"
+#     global: yes
+#     state: present
+
+# - name: Install Expo CLI globally
+#   community.general.npm:
+#     name: "@expo/cli"
+#     global: yes
+#     state: present
+
+# - name: Install Expo Dev Client
+#   npm:
+#     name: expo-dev-client
+#     global: yes
+#     state: present

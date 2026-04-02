@@ -1,0 +1,36 @@
+username: serveradmin
+
+password:
+smbuser_password: 
+
+shell: /bin/bash
+security_ssh_config_path: "/etc/ssh/sshd_config"
+security_ssh_password_authentication: "no"
+security_ssh_permit_root_login: "no"
+security_ssh_port: 22
+security_ssh_usedns: "no"
+security_ssh_permit_empty_password: "no"
+security_ssh_challenge_response_auth: "no"
+security_ssh_gss_api_authentication: "no"
+security_ssh_x11_forwarding: "no" 
+
+packages:
+  - vim
+  - neofetch
+  - btop
+  - htop
+  - python3
+  - gnupg
+  - curl
+  - qemu-guest-agent
+  - python3-pip
+  - cifs-utils
+  - fdisk
+  - git
+  - wget
+  - jq
+  - httpie
+  - tmux
+  - tree
+  - make
+  - build-essential

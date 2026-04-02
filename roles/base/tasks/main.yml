@@ -1,0 +1,66 @@
+---
+# - name: Copy SSH Key Into Remote Host
+#   ansible.builtin.copy:
+#     src: ~/.ssh/id_ed25519.pub
+#     dest: /home/{{ ansible_user }}/.ssh/authorized_keys
+#     mode: '0600'
+#   when: ansible_facts['os_family'] == "Debian"
+
+# - name: Print information on remote host
+#   ansible.builtin.debug:
+#     var: hostvars[inventory_hostname]
+#     verbosity: 4
+
+- name: add {{ ansible_user }} to sudoers
+  ansible.builtin.copy:
+    src: sudoer_{{ ansible_user }}
+    dest: /etc/sudoers.d/{{ ansible_user }}
+    # src: sudoer_serveradmin
+    # dest: /etc/sudoers.d/serveradmin
+    owner: root
+    group: root
+    mode: 0440
+
+- name: Update package cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Upgrade all packages to the latest version
+  ansible.builtin.apt:
+    upgrade: dist
+  when: ansible_facts['os_family'] == "Debian"
+  notify: "update package cache"
+
+- name: Install essential tools
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - unzip
+      - vim
+      - htop
+      - build-essential
+      - lsof
+      - tar
+      - jq
+      - git
+      - tree
+      - bind9-dnsutils
+      - tmux
+      - gpg
+      - net-tools
+      - zip
+      - ca-certificates
+      - procps
+      - apt-transport-https
+      - gnupg
+      - lsb-release
+      - xz-utils
+      - libc6
+      - bash
+      - python3.13-venv
+    state: present
+    install_recommends: no
+  when: ansible_facts['os_family'] == "Debian"
