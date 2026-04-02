@@ -1,0 +1,10 @@
+---
+- name: Run macOS specific tasks
+  hosts: macservers
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Include macOS specific tasks
+      ansible.builtin.include_role:
+        name: macos

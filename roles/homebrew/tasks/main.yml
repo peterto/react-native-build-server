@@ -1,0 +1,52 @@
+---
+- name: Ensure Homebrew dependencies are installed
+  ansible.builtin.apt:
+    name:
+      - build-essential
+      - curl
+      - git
+      - tar
+  become: true
+
+- name: Check if Homebrew is already installed
+  ansible.builtin.stat:
+    path: "/home/linuxbrew/.linuxbrew/bin/brew"
+  register: brew_stat
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Install homebrew
+  become: false 
+  ansible.builtin.shell: '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+  args:
+    creates: /home/linuxbrew/.linuxbrew/bin/brew
+  environment:
+    NONINTERACTIVE: "1"
+  when: not brew_stat.stat.exists and ansible_facts['os_family'] == "Debian"
+
+- name: Update homebrew
+  become: false 
+  community.general.homebrew:
+    state: latest
+    update_homebrew: yes
+
+# - name: Enable homebrew binaries
+#   lineinfile:
+#     path: ~/.bashrc
+#     line: 'export PATH="/usr/local/bin:$PATH"'
+#   when: '"bash" in shells'
+
+# - name: Source bashrc
+#   shell: source ~/.bashrc
+#   when: '"bash" in shells'
+
+- name: Enable homebrew binaries
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    line: 'export PATH="/usr/local/bin:$PATH"'
+  when: ansible_env.SHELL is defined and ('bash' in ansible_env.SHELL)
+
+- name: Source bashrc
+  shell: . "{{ ansible_env.HOME }}/.bashrc"
+  args:
+    executable: /bin/bash
+  when: ansible_env.SHELL is defined and ('bash' in ansible_env.SHELL)

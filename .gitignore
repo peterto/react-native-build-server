@@ -6,7 +6,6 @@
 .DS_Store
 .ansible
 *.retry
-roles*
 config.yml
 
 # Local inventories / credentials (keep out of repo)

@@ -1,0 +1,163 @@
+---
+- name: Check if i386 architecture is enabled (Debian)
+  become: true
+  ansible.builtin.shell: dpkg --print-foreign-architectures | grep -qw i386
+  register: i386_arch_enabled
+  ignore_errors: true
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Enable i386 architecture (Debian)
+  become: true
+  ansible.builtin.shell: 
+  args:
+    cmd: 'dpkg --print-foreign-architectures | grep -qw i386 || dpkg --add-architecture i386'
+  # args:
+    # warn: false
+  when: ansible_facts['os_family'] == "Debian" and not i386_arch_enabled.rc == 0
+
+- name: Backup /etc/apt/sources.list (Debian)
+  become: true
+  ansible.builtin.copy:
+    src: /etc/apt/sources.list
+    dest: /etc/apt/sources.list.bak_ansible
+  when: ansible_distribution == "Debian"
+
+- name: Enable contrib and non-free in /etc/apt/sources.list (Debian)
+  become: true
+  ansible.builtin.replace:
+    path: /etc/apt/sources.list
+    regexp: '^(deb(?:-src)?\s+\S+\s+\S+\s+)(main)(\s|$)'
+    replace: '\1main contrib non-free\3'
+    backup: yes
+  when: ansible_distribution == "Debian"
+
+- name: Update apt cache (Debian)
+  become: true
+  ansible.builtin.apt:
+    update_cache: yes
+  when: ansible_distribution == "Debian"
+
+- name: Update apt cache after adding i386
+  become: true
+  ansible.builtin.apt:
+    update_cache: yes
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Install Android Studio dependencies (Debian-based)
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - libc6:i386
+    - libncurses5-dev:i386
+    - libstdc++6:i386
+    - lib32z1
+    - libbz2-1.0:i386
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Install Android Command Line Tools with Homebrew
+  become: false
+  community.general.homebrew:
+    name: android-commandlinetools
+    state: present
+
+- name: Install Android Platform Line Tools with Homebrew
+  become: false
+  community.general.homebrew:
+    name: android-platform-tools
+    state: present
+
+- name: Install Android SDK
+  ansible.builtin.apt:
+    name: android-sdk
+    state: present
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Set environment variable for ANDROID_HOME
+  ansible.builtin.lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    line: 'export ANDROID_HOME=/usr/lib/android-sdk'
+    state: present
+
+- name: Set environment variable for ANDROID_TOOLS
+  ansible.builtin.lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    line: 'export ANDROID_TOOLS=/usr/lib/android-sdk/tools/bin'
+    state: present
+
+- name: Set environment variable for ANDROID_PLATFORM_TOOLS
+  ansible.builtin.lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    line: 'export ANDROID_PLATFORM_TOOLS=/usr/lib/android-sdk/platform-tools'
+    state: present
+
+- name: Set environment variable for ANDROID_SDK_ROOT
+  ansible.builtin.lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    line: 'export ANDROID_SDK_ROOT=/usr/lib/android-sdk'
+    state: present
+
+- name: Add Android cmdline-tools to PATH
+  ansible.builtin.lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    line: 'export PATH=$PATH:/home/linuxbrew/.linuxbrew/share/android-commandlinetools/cmdline-tools/latest/bin'
+    state: present
+
+- name: Check for Android SDK licenses
+  ansible.builtin.stat:
+    path: /usr/lib/android-sdk/licenses/android-sdk-license
+  register: android_sdk_licenses
+
+# - name: Check for Android SDK licenses and register result
+#   ansible.builtin.stat:
+#     path: "/usr/lib/android-sdk/licenses/{{ item }}"
+#   loop:
+#     - android-googletv-license
+#     - android-googlexr-license
+#     - android-sdk-arm-dbt-license
+#     - android-sdk-license
+#     - android-sdk-preview-license
+#     # - apache-2.0
+#     - google-gdk-license
+#     - mips-android-sysimage-license
+#   register: android_sdk_license_check
+#   when: ansible_facts['os_family'] == "Debian"
+
+- name: Accept Android SDK licenses if not already accepted
+  ansible.builtin.shell: yes | sdkmanager --sdk_root=/usr/lib/android-sdk --licenses
+  environment:
+    ANDROID_HOME: /usr/lib/android-sdk
+    ANDROID_SDK_ROOT: /usr/lib/android-sdk
+    PATH: "/home/linuxbrew/.linuxbrew/share/android-commandlinetools/cmdline-tools/latest/bin:{{ ansible_env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  when: not android_sdk_licenses.stat.exists
+  # when: android_sdk_license_check.results | map(attribute='stat.exists') | select('equalto', True) | list | length == 0
+
+# sudo cp -r /home/linuxbrew/.linuxbrew/share/android-commandlinetools/licenses/ /usr/lib/android-sdk/
+
+# - name: Copy Android SDK licenses
+#   ansible.builtin.copy:
+#     src: /home/linuxbrew/.linuxbrew/share/android-commandlinetools/licenses/
+#     dest: /usr/lib/android-sdk/licenses/
+#     owner: "{{ ansible_user }}"
+#     group: "{{ ansible_user }}"
+#     mode: '0755'
+#     remote_src: yes
+
+# chown -R {{ ansible_user }} /usr/lib/android-sdk
+
+- name: Update permissions for Android SDK directory
+  ansible.builtin.file:
+    path: /usr/lib/android-sdk
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    recurse: yes
+    mode: '0755'
+
+- name: Ensure ANDROID_HOME is owned by the play user
+  become: true
+  ansible.builtin.file:
+    path: "{{ ansible_env.ANDROID_HOME }}"
+    owner: "{{ ansible_user }}"
+    recurse: yes
+  when: ansible_env.ANDROID_HOME is defined
