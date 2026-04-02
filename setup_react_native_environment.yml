@@ -1,10 +1,14 @@
 ---
 - name: Setup React Native Build Environment
-  hosts: buildservers2
+  hosts: buildservers
   become: yes
   gather_facts: yes
 
   tasks:
+    - name: Add SSH Key to Remote Host
+      ansible.builtin.include_role:
+        name: ssh
+
     - name: Install Base Dependencies
       ansible.builtin.include_role:
         name: base
